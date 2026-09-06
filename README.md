@@ -10,4 +10,12 @@
 
 ## 接口契约
 
-演示阶段两个服务仓库各自保留一份相同的 `proto/rpcdemo.proto`。生产环境应把 Proto 迁移到独立的 contracts 仓库或 Schema Registry，并在 CI 中检查兼容性，避免两份接口定义发生漂移。
+接口的唯一源文件位于独立仓库 `Shijf/rpc-contracts`。本仓库不再保存或编译 `.proto`，只携带 `vendor/rpcdemo` 中经过验证的 Python SDK，因此 Dokploy 构建时不需要 GitHub 密钥，也不依赖外网。
+
+当前 SDK 版本见 `vendor/RPC_CONTRACTS_VERSION`。升级协议时先在 `rpc-contracts` 生成三种语言 SDK，再执行：
+
+```bash
+/home/shijf/rpc-contracts/scripts/vendor-python.sh /home/shijf/rpc-user-service
+```
+
+检查生成代码差异、构建镜像并完成 RPC 测试后再提交。

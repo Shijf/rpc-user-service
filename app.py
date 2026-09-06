@@ -14,20 +14,20 @@ import grpc
 from grpc_health.v1 import health, health_pb2, health_pb2_grpc
 from grpc_reflection.v1alpha import reflection
 
-import rpcdemo_pb2
-import rpcdemo_pb2_grpc
+from rpcdemo.v1 import rpcdemo_pb2, rpcdemo_pb2_grpc
 
 
 GRPC_PORT = int(os.environ.get("GRPC_PORT", "50051"))
 HTTP_PORT = int(os.environ.get("HTTP_PORT", "8080"))
 ORDER_SERVICE_ADDR = os.environ.get("ORDER_SERVICE_ADDR", "order-service:50051")
 HOSTNAME = socket.gethostname()
+CONTRACTS_VERSION = os.environ.get("RPC_CONTRACTS_VERSION", "0.1.0")
 
 
 class UserService(rpcdemo_pb2_grpc.UserServiceServicer):
     def GetUser(self, request, context):
         user_id = request.user_id or "10001"
-        return rpcdemo_pb2.User(
+        return rpcdemo_pb2.GetUserResponse(
             user_id=user_id,
             nickname=f"演示用户-{user_id}",
             source_service=f"user-service/{HOSTNAME}",
@@ -72,7 +72,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/healthz":
-            self.send_json(200, {"status": "SERVING", "service": "user-service"})
+            self.send_json(
+                200,
+                {
+                    "status": "SERVING",
+                    "service": "user-service",
+                    "rpc_contracts": CONTRACTS_VERSION,
+                },
+            )
         elif self.path in ("/", "/demo"):
             try:
                 self.send_json(200, {"success": True, **call_order_service()})
